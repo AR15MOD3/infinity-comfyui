@@ -1,6 +1,6 @@
 {
   "name": "infinity-comfyui",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "author": "AR15MOD3",
   "private": true,
   "description": "QQ 功能扩展，仅支持 Windows 秋叶版 ComfyUI 整合包。由同一 Bot 已启用的「QQ 连接」（core-infinity-qq）接收画图请求并发回图片。",
@@ -16,7 +16,48 @@
     "api": 1,
     "botScope": 1,
     "displayName": "ComfyUI 生图",
-    "configSchema": "config.schema.json"
+    "configSchema": "config.schema.json",
+    "configPage": "setup.html",
+    "pageBackendApi": 1,
+    "pageBackend": "setup_page.py",
+    "pageActions": {
+      "status": {
+        "mutates": false,
+        "label": "读取部署进度"
+      },
+      "inspect": {
+        "mutates": false,
+        "label": "检查 Windows 本机环境"
+      },
+      "pillow": {
+        "mutates": true,
+        "label": "为本机 Core 安装 Pillow"
+      },
+      "choose": {
+        "mutates": true,
+        "label": "选择秋叶目录"
+      },
+      "source": {
+        "mutates": true,
+        "label": "在本机浏览器打开秋叶发布页"
+      },
+      "install_bundle": {
+        "mutates": true,
+        "label": "选择并安装秋叶整合包"
+      },
+      "seven_zip": {
+        "mutates": true,
+        "label": "在 Windows 安装 7-Zip"
+      },
+      "launch": {
+        "mutates": true,
+        "label": "打开绘世启动器"
+      },
+      "test_image": {
+        "mutates": true,
+        "label": "使用本机显卡生成一张测试图"
+      }
+    }
   },
   "repository": {
     "type": "git",

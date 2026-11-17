@@ -24,7 +24,6 @@ def host(tmp_path):
     root.mkdir()
     scope = make_plugin_scope(root, "test-bot", "test-bot")
     assert market.install_from(root, PACKAGE)["ok"]
-    scope.save_config(NAME, {"workflow_file": "anima.json"})
     try:
         yield root, scope
     finally:
@@ -47,7 +46,7 @@ def mock_comfy(monkeypatch, callback):
 @pytest.mark.parametrize(("scope_name", "target"), [("private", "123"), ("group", "456")])
 def test_generate_then_send(host, monkeypatch, scope_name, target):
     root, scope = host
-    scope.save_config(NAME, {"server": "http://windows.test:8188", "workflow_file": "anima.json"})
+    scope.save_config(NAME, {"server": "http://windows.test:8188"})
     assert market.install_from(root, CORE / "builtin/infinity" / QQ)["ok"]
     scope.save_config(QQ, {"httpUrl":"http://127.0.0.1:3000", "privates":["123"], "groups":["456"]})
     image = io.BytesIO()
@@ -56,10 +55,12 @@ def test_generate_then_send(host, monkeypatch, scope_name, target):
     def comfy(request):
         calls.append(request.url.path)
         assert request.url.host == "windows.test"
+        if request.url.path == "/models/checkpoints":
+            return httpx.Response(200, json=["测试 模型/任选.safetensors"])
         if request.url.path == "/prompt":
             graph = json.loads(request.content)["prompt"]
             assert graph["6"]["inputs"]["text"] == "月光下的白猫"
-            assert graph["1"]["inputs"]["unet_name"] == "miaomiaoHarem_anima15.safetensors"
+            assert graph["4"]["inputs"]["ckpt_name"] == "测试 模型/任选.safetensors"
             return httpx.Response(200, json={"prompt_id": "one"})
         if request.url.path == "/history/one":
             if calls.count("/history/one") == 1:
@@ -89,7 +90,7 @@ def test_generate_then_send(host, monkeypatch, scope_name, target):
     assert (scope.root / QQ / "runtime/media/outbox" / receipt["image"]).is_file()
     assert "message_id=42" in tools["qq_send_image"](scope_name, target, receipt["image"])
     assert len(posted) == 1
-    assert calls == ["/prompt", "/history/one", "/history/one", "/view"]
+    assert calls == ["/models/checkpoints", "/prompt", "/history/one", "/history/one", "/view"]
 
 
 @pytest.mark.parametrize("failure", ["rejected", "execution", "invalid_image", "missing_output", "lost_receipt"])
@@ -97,6 +98,8 @@ def test_failure_never_resubmits_or_publishes(host, monkeypatch, failure):
     root, scope = host
     submissions = []
     def respond(request):
+        if request.url.path == "/models/checkpoints":
+            return httpx.Response(200, json=["local.ckpt"])
         if request.url.path == "/prompt":
             submissions.append(request)
             if failure == "lost_receipt":
@@ -146,6 +149,8 @@ def test_timeout_points_to_existing_job(host, monkeypatch):
     monkeypatch.setattr(sys.modules[f"core_infinity_{NAME}"], "WAIT_SECONDS", 0.02)
     calls = []
     def respond(request):
+        if request.url.path == "/models/checkpoints":
+            return httpx.Response(200, json=["local.ckpt"])
         calls.append(request.method)
         return httpx.Response(200, json={"prompt_id":"queued-job"} if request.method=="POST" else {})
     mock_comfy(monkeypatch, respond)
@@ -177,7 +182,7 @@ def test_configuration_save_conflict_and_reload(host):
     assert config.save(NAME, {"revision": config.read(NAME)["revision"], "changes": []})["ok"]
     with pytest.raises(RuntimeError):
         asyncio.run(tool("旧实例"))
-    assert [t.name for t in plugins.gathered(root, scope=scope)["specs"]] == ["comfyui_generate"]
+    assert {t.name for t in plugins.gathered(root, scope=scope)["specs"]} == {"comfyui_generate", "comfyui_models"}
     plugins.switch(root, NAME, on=False, host={"bot_id":scope.bot}, scope=scope)
     assert not plugins.gathered(root, scope=scope)["specs"]
 
@@ -189,6 +194,8 @@ def test_cancel_after_submission(host, monkeypatch):
     calls = []
 
     async def respond(request):
+        if request.url.path == "/models/checkpoints":
+            return httpx.Response(200, json=["local.ckpt"])
         calls.append(request.method)
         if request.method == "POST":
             return httpx.Response(200, json={"prompt_id": "accepted"})
@@ -208,22 +215,55 @@ def test_cancel_after_submission(host, monkeypatch):
     assert not (scope.root / QQ / "runtime/media/outbox").exists()
 
 
-def test_bot_scope_and_waiting_for_configuration(host):
+def test_upgrade_preserves_explicit_workflow_and_bot_scope(host):
     root, scope = host
     other = make_plugin_scope(root, "second-bot", scope.bot)
-    scope.save_config(NAME, {"workflow_file":"", "checkpoint":""})
-    waiting = plugins.carry(root, NAME, host={"bot_id":scope.bot}, scope=scope)
-    assert waiting.get("setup_required")
-    assert "基础模型" in waiting["said"]
-    fresh = plugins.carry(root, NAME, host={"bot_id":other.bot}, scope=other)
-    assert fresh.get("setup_required") and "QQ 连接" in fresh["said"]
-    other.save_config(NAME, {"workflow_file":"anima.json"})
+    scope.save_config(NAME, {"workflow_file":"anima.json"})
+    existing = plugins.carry(root, NAME, host={"bot_id":scope.bot}, scope=scope)
+    assert existing["ok"] and existing["got"].checkpoint is None
+    assert existing["got"].graph["1"]["class_type"] == "UNETLoader"
+    plugins.put_out(root, NAME, scope=scope)
     second = plugins.carry(root, NAME, host={"bot_id":other.bot}, scope=other)
-    assert second["ok"] and second["got"].graph["1"]["class_type"] == "UNETLoader"
+    assert second["ok"] and second["got"].checkpoint == ""
+    assert second["got"].graph["4"]["class_type"] == "CheckpointLoaderSimple"
     import sys
     module = sys.modules[f"core_infinity_{NAME}"]
     ctx = second["got"].ctx
     assert module.qq_outbox(ctx) == other.root / QQ / "runtime/media/outbox"
     with pytest.raises(ValueError):
         module.qq_outbox(dict(ctx, bot_id=scope.bot))
-    assert not scope.read_config(NAME)["workflow_file"]
+    assert scope.read_config(NAME)["workflow_file"] == "anima.json"
+
+@pytest.mark.parametrize(("names", "wanted", "message"), [
+    ([], "", "models/checkpoints"),
+    (["alpha.ckpt", "beta.ckpt"], "", "多个 checkpoint"),
+    (["beta.ckpt"], "missing.ckpt", "找不到指定"),
+])
+def test_first_run_stops_before_queue(host, monkeypatch, names, wanted, message):
+    root, scope = host
+    def respond(request):
+        assert request.method == "GET" and request.url.path == "/models/checkpoints"
+        return httpx.Response(200, json=names)
+    mock_comfy(monkeypatch, respond)
+    tools = enable(root, scope, NAME)
+    assert json.loads(asyncio.run(tools["comfyui_models"]()))["checkpoints"] == names
+    with pytest.raises(ValueError, match=message):
+        asyncio.run(tools["comfyui_generate"]("雨", checkpoint=wanted))
+
+
+@pytest.mark.parametrize(("wanted", "expected"), [("", "first.ckpt"), ("第二个.ckpt", "第二个.ckpt")])
+def test_selected_model_uses_exact_server_name(host, monkeypatch, wanted, expected):
+    root, scope = host
+    scope.save_config(NAME, {"checkpoint": "first.ckpt"})
+    submitted = []
+    def respond(request):
+        if request.url.path == "/models/checkpoints":
+            return httpx.Response(200, json=["first.ckpt", "第二个.ckpt"])
+        submitted.append(json.loads(request.content)["prompt"]["4"]["inputs"]["ckpt_name"])
+        return httpx.Response(422)
+    mock_comfy(monkeypatch, respond)
+    tools = enable(root, scope, NAME)
+    assert json.loads(asyncio.run(tools["comfyui_models"]("第二")))["checkpoints"] == ["第二个.ckpt"]
+    with pytest.raises(ValueError, match="422"):
+        asyncio.run(tools["comfyui_generate"]("夜空", checkpoint=wanted))
+    assert submitted == [expected]

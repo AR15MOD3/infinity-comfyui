@@ -9,14 +9,14 @@
     },
     "checkpoint": {
       "type": "string",
-      "title": "SD 1.5 基础模型（可选）",
-      "description": "内置 SD 1.5 工作流使用。填写 ComfyUI 模型下拉框中的完整名称，含扩展名。",
+      "title": "基础工作流的 checkpoint（可选）",
+      "description": "完整模型名取自 ComfyUI 的 checkpoints 列表。留空时，只有一个就使用它，多个时可在会话中选择。",
       "default": ""
     },
     "workflow_file": {
       "type": "string",
       "title": "API 工作流",
-      "description": "填写自己导出的 API 格式工作流路径，或留空并在上方填写与内置 SD 1.5 工作流兼容的 checkpoint。",
+      "description": "留空使用基础文生图工作流。分体模型、LoRA 或其他专用流程可填写配套 API 格式 JSON 的路径。",
       "default": ""
     },
     "prompt_input": {

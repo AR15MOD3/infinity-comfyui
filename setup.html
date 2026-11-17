@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ComfyUI 首次部署</title>
+<style>
+:root{color-scheme:light dark;font:14px/1.55 "Segoe UI","Microsoft YaHei",sans-serif;color:light-dark(#23352f,#e2ece7);background:light-dark(#fff,#202522);--line:light-dark(#d8dfdb,#454e48);--muted:light-dark(#52625a,#b5c2ba);--accent:light-dark(#246554,#9ed7b8)}
+*{box-sizing:border-box}body{max-width:760px;margin:0 auto;padding:16px}header,.actions{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.actions{justify-content:start;margin:10px 0}section,details{padding:14px 0;border-top:1px solid var(--line)}h1{font-size:21px}h1,h2,p{margin:4px 0 8px}h2,summary{font-size:16px;font-weight:600}small,p{color:var(--muted)}button{font:inherit;color:inherit;border:1px solid var(--line);border-radius:7px;background:transparent;padding:6px 11px;cursor:pointer}button:disabled{opacity:.55;cursor:default}.primary{background:var(--accent);border-color:transparent;color:light-dark(white,#142c20)}button:focus-visible,summary:focus-visible{outline:2px solid var(--accent)}dl{margin:8px 0}dl>div{display:grid;grid-template-columns:minmax(95px,1fr) 3fr;gap:8px;padding:5px 0}dt{font-weight:600}dd{margin:0;color:var(--muted);overflow-wrap:anywhere}.warn{color:light-dark(#834e17,#eabc83)}#message{min-height:1.6em;white-space:pre-line}img{max-width:min(256px,100%);border-radius:6px}code{overflow-wrap:anywhere}summary{cursor:pointer}
+</style>
+<header><h1>首次部署</h1><button data-action="inspect">重新检查</button></header>
+<p id="message" role="status" aria-live="polite">等候 Core 页面接口…</p>
+<section><h2>Windows 本机环境</h2><dl id="checks"></dl><div class="actions">
+<button data-action="pillow" class="primary" id="repair">安装图片依赖</button>
+<button data-action="launch" id="launch">打开绘世启动器</button></div></section>
+<details id="install"><summary>选择或安装秋叶整合包</summary><p>已有整合包可以直接选择。首次安装请从作者发布页下载原包，再选择压缩包和解压位置；文件选择窗口会出现在运行 Core 的 Windows 桌面。</p>
+<div class="actions"><button data-action="choose">选择已有目录</button><button data-action="source">打开作者发布页</button><button data-action="install_bundle">从压缩包安装</button><button data-action="seven_zip">安装 7-Zip</button></div></details>
+<section><h2>工作流试图</h2><p>在「常规配置」保存 API 工作流或基础模型，再重新检查。试图使用当前配置画一只白猫，调用一次本机显卡。</p>
+<button id="test" data-action="test_image">生成测试图</button><div id="sample" hidden><p>上次成功生成的测试图</p><img alt="上次本机测试图"><p><code></code></p></div></section>
+<section><h2>QQ 回图验收</h2><p>在同一 Bot 启用「QQ 连接」和「ComfyUI 生图」，从目标私聊或群聊请她画一张图。在原会话收到图片后完成验收。本机试图只验证生成与取图。</p></section>
+<script>
+'use strict';
+const byId=id=>document.getElementById(id);
+const controls=[...document.querySelectorAll('[data-action]')];
+let config, seq=0, pending=null, snapshot={}, loading=false, poll, opened=false, firstStatus=true, seen='';
+const message=text=>byId('message').textContent=text;
+function request(action){
+  if(!config?.pageActions?.[action])return Promise.reject(Error('此 Core 未提供部署页面接口。'));
+  const id=String(++seq);
+  return new Promise((resolve,reject)=>{
+    const timer=setTimeout(()=>{pending=null;reject(Error('宿主回执未收到。重新检查前请先核对当前任务。'));},60000);
+    pending={id,timer,resolve,reject};
+    parent.postMessage({type:'telyincore:page:request',action,payload:{},revision:config.revision,id},'*');
+  });
+}
+function draw(){
+  const checks=snapshot.checks, job=snapshot.job;
+  const rows=byId('checks');rows.replaceChildren();
+  for(const r of checks?.rows||[]){
+    const line=document.createElement('div'), label=document.createElement('dt'), detail=document.createElement('dd');
+    label.textContent=r.title;detail.textContent=(r.ok?'✓ ':'待处理 · ')+r.detail;
+    if(!r.ok)detail.className='warn';line.append(label,detail);rows.append(line);
+  }
+  byId('repair').hidden=checks?.pillow===true;
+  byId('launch').hidden=!checks?.bundle||checks?.active===true;
+  for(const b of controls)b.disabled=loading||!config?.pageActions?.[b.dataset.action]||Boolean(job&&!job.done&&b.dataset.action!=='inspect');
+  byId('test').disabled||=!checks?.workflow||!checks?.pillow;
+  if(snapshot.sample){
+    const box=byId('sample');box.hidden=false;box.querySelector('img').src=snapshot.sample.preview;
+    box.querySelector('code').textContent=snapshot.sample.path;
+  }
+}
+async function act(action,auto=false){
+  if(loading)return;
+  clearTimeout(poll);loading=true;draw();
+  let next='',delay=0;
+  if(action==='inspect'&&snapshot.job&&!snapshot.job.done)action='status';
+  if(!auto)message('正在处理…');
+  try{
+    const data=await request(action);
+    if(data.error)throw Error(data.error);
+    const initial=action==='status'&&firstStatus;
+    if(action==='status')firstStatus=false;
+    if(Object.hasOwn(data,'job'))snapshot=data;
+    const job=snapshot.job;
+    if(job&&!job.done){message('操作进行中，请留意本机窗口。');next='status';delay=1500;}
+    else if(data.message){message(data.message);}
+    else if(job){
+      message(job.error||job.message||'操作完成');
+      if(job.id!==seen){
+        seen=job.id;
+        if(!job.error&&job.action!=='inspect'&&job.action!=='test_image')next='inspect';
+        if(job.action==='inspect'&&snapshot.checks&&!snapshot.checks.bundle)byId('install').open=true;
+      }
+    }else if(auto){next='inspect';}
+    if(initial&&(!job||job.done)&&!job?.error)next='inspect';
+  }catch(e){message(e.message);}
+  finally{loading=false;draw();if(next)poll=setTimeout(()=>act(next,true),delay);}
+}
+window.addEventListener('message',e=>{
+  if(e.source!==parent)return;
+  const d=e.data;
+  if(d?.type==='telyincore:config:state'){
+    config=d.config;draw();
+    if(!config?.pageActions?.inspect){message('请使用支持插件操作者页面的 Core。');return;}
+    if(d.active&&!opened){opened=true;act('status',true);}
+  }else if(d?.type==='telyincore:page:result'&&pending&&d.id===pending.id){
+    const call=pending;pending=null;clearTimeout(call.timer);
+    if(d.ok)call.resolve(d.result);else call.reject(Error(d.message||'宿主未完成操作。'));
+  }
+});
+for(const b of controls)b.addEventListener('click',()=>act(b.dataset.action));
+draw();parent.postMessage({type:'telyincore:config:get'},'*');
+</script></html>
