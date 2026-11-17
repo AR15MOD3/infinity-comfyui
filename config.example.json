@@ -1,0 +1,8 @@
+{
+  "server": "http://127.0.0.1:8188",
+  "checkpoint": "",
+  "workflow_file": "anima.json",
+  "prompt_input": "6.text",
+  "seed_input": "3.seed",
+  "output_node": "9"
+}

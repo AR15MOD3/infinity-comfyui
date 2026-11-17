@@ -1,0 +1,16 @@
+{
+  "name": "infinity-comfyui",
+  "version": "0.1.0",
+  "author": "Codex",
+  "private": true,
+  "description": "让 Bot 调用 ComfyUI 文生图，并通过 QQ 连接把图片发回会话。",
+  "keywords": ["core-infinity"],
+  "main": "index.py",
+  "telyincore": {
+    "kind": "infinity",
+    "api": 1,
+    "botScope": 1,
+    "displayName": "ComfyUI 生图",
+    "configSchema": "config.schema.json"
+  }
+}

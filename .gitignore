@@ -1,0 +1,17 @@
+config.json
+.config-backups/
+.env
+.env.*
+!.env.example
+.venv/
+node_modules/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.log
+data/
+cache/
+runtime/
+*.part
+*.safetensors
+*.gguf

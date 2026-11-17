@@ -1,0 +1,41 @@
+{
+  "type": "object",
+  "properties": {
+    "server": {
+      "type": "string",
+      "title": "ComfyUI 地址",
+      "description": "从 TelyinCore 所在机器可以访问的 HTTP(S) 服务地址。",
+      "default": "http://127.0.0.1:8188"
+    },
+    "checkpoint": {
+      "type": "string",
+      "title": "SD 1.5 基础模型（可选）",
+      "description": "内置 SD 1.5 工作流使用。填写 ComfyUI 模型下拉框中的完整名称，含扩展名。",
+      "default": ""
+    },
+    "workflow_file": {
+      "type": "string",
+      "title": "API 工作流",
+      "description": "默认 anima.json 对应 Windows 上的 Anima 模型。可填写其他 API 工作流的路径；留空则使用 SD 1.5 基础模型。",
+      "default": "anima.json"
+    },
+    "prompt_input": {
+      "type": "string",
+      "title": "正向提示词位置",
+      "description": "工作流中用于写入画面描述的 节点ID.输入名，例如 6.text。",
+      "default": "6.text"
+    },
+    "seed_input": {
+      "type": "string",
+      "title": "随机种子位置",
+      "description": "每张图随机一次。自定义工作流可改为对应位置，留空则保留工作流原值。",
+      "default": "3.seed"
+    },
+    "output_node": {
+      "type": "string",
+      "title": "图片输出节点 ID",
+      "description": "读取这个节点输出的第一张成品图，内置工作流使用 9。",
+      "default": "9"
+    }
+  }
+}
