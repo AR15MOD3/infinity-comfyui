@@ -53,4 +53,8 @@ TelyinCore 需要支持 Infinity API 1、异步工具和当前 Bot 的 QQ 发图
 
 使用 TelyinCore 的 Python 环境，在本仓库根目录将 `PYTHONPATH` 指向宿主的 `core` 源码目录，然后运行 `python -m pytest tests`。测试在临时 Bot 档案中运行，使用真实插件装载器与 QQ 插件，ComfyUI 和 OneBot 的网络响应由测试提供。两端分别通过 12 项测试，覆盖私聊与群聊回执、配置保存与冲突、重载、Bot 隔离、取消、超时和失败处理。实际 GPU 出图与真实 QQ 收图仍待验证。
 
-本项目是独立开发的 TelyinCore 附属插件，运行时依赖宿主提供的工具与发图能力。仓库仅分发插件源码、工作流参数、文档与测试。TelyinCore、QQ 连接、ComfyUI、依赖及模型各自适用其授权。问题请通过本仓库的 GitHub Issues 联系维护者，附上插件与宿主版本、复现步骤和已脱敏的错误信息。
+本项目是独立开发的 TelyinCore 附属插件，运行时依赖宿主提供的工具与发图能力。仓库仅分发插件源码、工作流参数、文档与测试。TelyinCore、QQ 连接、ComfyUI、依赖及模型各自适用其授权。本插件由 AR15MOD3 发布与维护，借助 Codex 开发。反馈时请提供插件与宿主版本、复现步骤和已脱敏的错误信息。[提交问题](https://github.com/AR15MOD3/infinity-comfyui/issues)
+
+## 许可证
+
+本插件以 MIT 许可证发布，可用于商业项目。复制或再分发时须保留版权声明和许可声明。[许可证全文](LICENSE)

@@ -1,10 +1,12 @@
 {
   "name": "infinity-comfyui",
   "version": "0.1.0",
-  "author": "Codex",
+  "author": "AR15MOD3",
   "private": true,
   "description": "让 Bot 调用 ComfyUI 文生图，并通过 QQ 连接把图片发回会话。",
-  "keywords": ["core-infinity"],
+  "keywords": [
+    "core-infinity"
+  ],
   "main": "index.py",
   "telyincore": {
     "kind": "infinity",
@@ -12,5 +14,13 @@
     "botScope": 1,
     "displayName": "ComfyUI 生图",
     "configSchema": "config.schema.json"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AR15MOD3/infinity-comfyui.git"
+  },
+  "bugs": {
+    "url": "https://github.com/AR15MOD3/infinity-comfyui/issues"
+  },
+  "license": "MIT"
 }
