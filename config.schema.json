@@ -16,8 +16,8 @@
     "workflow_file": {
       "type": "string",
       "title": "API 工作流",
-      "description": "默认 anima.json 对应 Windows 上的 Anima 模型。可填写其他 API 工作流的路径；留空则使用 SD 1.5 基础模型。",
-      "default": "anima.json"
+      "description": "填写自己导出的 API 格式工作流路径，或留空并在上方填写与内置 SD 1.5 工作流兼容的 checkpoint。",
+      "default": ""
     },
     "prompt_input": {
       "type": "string",

@@ -24,6 +24,7 @@ def host(tmp_path):
     root.mkdir()
     scope = make_plugin_scope(root, "test-bot", "test-bot")
     assert market.install_from(root, PACKAGE)["ok"]
+    scope.save_config(NAME, {"workflow_file": "anima.json"})
     try:
         yield root, scope
     finally:
@@ -46,7 +47,7 @@ def mock_comfy(monkeypatch, callback):
 @pytest.mark.parametrize(("scope_name", "target"), [("private", "123"), ("group", "456")])
 def test_generate_then_send(host, monkeypatch, scope_name, target):
     root, scope = host
-    scope.save_config(NAME, {"server": "http://windows.test:8188"})
+    scope.save_config(NAME, {"server": "http://windows.test:8188", "workflow_file": "anima.json"})
     assert market.install_from(root, CORE / "builtin/infinity" / QQ)["ok"]
     scope.save_config(QQ, {"httpUrl":"http://127.0.0.1:3000", "privates":["123"], "groups":["456"]})
     image = io.BytesIO()
@@ -214,6 +215,9 @@ def test_bot_scope_and_waiting_for_configuration(host):
     waiting = plugins.carry(root, NAME, host={"bot_id":scope.bot}, scope=scope)
     assert waiting.get("setup_required")
     assert "基础模型" in waiting["said"]
+    fresh = plugins.carry(root, NAME, host={"bot_id":other.bot}, scope=other)
+    assert fresh.get("setup_required") and "QQ 连接" in fresh["said"]
+    other.save_config(NAME, {"workflow_file":"anima.json"})
     second = plugins.carry(root, NAME, host={"bot_id":other.bot}, scope=other)
     assert second["ok"] and second["got"].graph["1"]["class_type"] == "UNETLoader"
     import sys

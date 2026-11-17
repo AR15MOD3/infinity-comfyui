@@ -1,12 +1,12 @@
 # ComfyUI 生图
 
-在 QQ 私聊里说「帮我画一只趴在窗台上看雨的白猫」，或在已允许的群聊里 @ 她并描述画面。Bot 调用 `comfyui_generate` 生成一张图，再把返回的文件名交给 `qq_send_image` 发回原会话。可在回执中核对 QQ 协议端给出的消息编号。
+ComfyUI 生图是 TelyinCore 的独立附属插件，为 QQ 会话增加画图功能。它依赖 Core 运行。在同一个 Bot 上，「QQ 连接」（`core-infinity-qq`）负责接收私聊或群聊消息，并通过 `qq_send_image` 回图。这个插件提供 `comfyui_generate`，把画面描述交给你自己的 ComfyUI。模型在 ComfyUI 所在机器上运行。
 
 ## 安装与连接
 
-1. 启动已有的 ComfyUI，先在它的工作台中用选定模型生成一张图。
-2. 打开 TelyinCore 的 Infinity 插件市场，刷新，找到 GitHub 来源的 `infinity-comfyui`。核对版本后安装。离线安装时，可以解压源码归档，在插件管理中从包含 `package.json` 的本机目录安装。
-3. 为目标 Bot 启用「QQ 连接」和「ComfyUI 生图」，在 QQ 连接里设置要接收图片的私聊或群聊。
+1. 在 Core 的插件市场刷新列表，搜索 `infinity-comfyui`，选择来源为 `AR15MOD3/infinity-comfyui` 的条目并安装。在已装插件中可以看到「ComfyUI 生图」，初始为停用。仅安装时无需启动 ComfyUI、准备模型或登录 QQ。离线时解压源码，在插件管理中从包含 `package.json` 的本机目录安装。
+2. 准备在 QQ 使用时，在目标 Bot 上配置并启用随 Core 提供的「QQ 连接」，确认能收到目标私聊或群聊的消息。市场安装生图插件不会代为配置 QQ。
+3. 在同一 Bot 的「ComfyUI 生图」配置页填写服务地址，并选用下文的一种工作流。保存后启用插件。首次启用时如果尚未选工作流或填写 checkpoint，Core 会提示待配置。ComfyUI 服务和模型就绪后，在 QQ 里说「帮我画一只趴在窗台上的白猫」即可发起请求。
 4. TelyinCore 与 ComfyUI 都在 Windows 上时，保留默认服务地址 `http://127.0.0.1:8188`。如果启动器显示其他端口，以实际地址为准。
 5. TelyinCore 在 Linux、ComfyUI 在 Windows 时，在生图插件的配置页填入 Linux 可以访问的地址，然后保存。如果 Windows 服务已监听局域网，可填 `http://<Windows 局域网 IP>:8188`。如果只监听回环地址且已有 SSH 登录，可在 Linux 执行下列命令并保持连接，插件地址填 `http://127.0.0.1:18188`。
 
@@ -16,7 +16,9 @@ ssh -N -L 127.0.0.1:18188:127.0.0.1:8188 用户名@Windows主机
 
 ## 工作流
 
-默认的 `anima.json` 使用标准节点，每次生成一张 768 × 768 图片，12 步采样，随机种子。该预设使用以下三个文件。
+新安装默认留空，可使用自己的 API 工作流，也可为内置 SD 1.5 工作流填写兼容的 checkpoint。由 0.1.0 升级且原先依赖默认 Anima 预设的用户，请在「API 工作流」中明确填写 `anima.json`。
+
+可选示例 `anima.json` 使用标准节点，每次生成一张 768 × 768 图片，12 步采样，随机种子。要使用这个示例，在「API 工作流」中填写 `anima.json`，并在 ComfyUI 准备以下三个文件。
 
 | ComfyUI 模型目录 | 文件 |
 | --- | --- |
@@ -45,7 +47,7 @@ TelyinCore 需要支持 Infinity API 1、异步工具和当前 Bot 的 QQ 发图
 
 - 排队和生成最多等待五分钟。已取得任务编号时，取图错误会附上该编号，可以在 ComfyUI 执行历史核对。服务端可能在等待超时后继续生成。
 - ComfyUI 的原图按工作流的 SaveImage 配置保存。用于发送的副本按 QQ 图片策略处理，写入当前 Bot 的 QQ outbox。普通 HTTP 地址即可跨机取图，双方无需共享文件夹。
-- 如果启用时报 `No module named PIL`，请在运行该 Bot 的 Core 环境中启用 QQ 图片依赖（Pillow）。独立测试环境中的 Pillow 仅供测试进程使用。
+- 如果启用时提示缺少 Pillow，在运行 Core 的 Python 环境中准备该依赖。例如在 Windows 的 Core 源码目录使用 PowerShell 执行 `.\.venv\Scripts\python.exe -m pip install "Pillow>=11,<13"`，然后重新启用。
 - 模型拒绝加载时，检查对应文件是否能在 ComfyUI 节点的下拉框选到。生图已完成但 QQ 未返回消息编号时，先检查原会话的发送权限和 QQ 连接状态。
 
 

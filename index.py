@@ -10,7 +10,10 @@ from urllib.parse import quote, urlsplit
 from uuid import uuid4
 
 import httpx
-from PIL import Image
+try:
+    from PIL import Image
+except ImportError:
+    Image = None
 
 from telyincore.image_policy import normalize_image
 from telyincore.plugin_media_scope import qq_media_paths
@@ -62,7 +65,9 @@ def create(ctx):
         raise ValueError("请填写有效的 ComfyUI HTTP(S) 地址")
     custom = cfg["workflow_file"].strip()
     if not custom and not cfg["checkpoint"].strip():
-        raise PluginSetupRequired("请在「ComfyUI 生图」配置里填写基础模型文件名，或指定自定义 API 工作流。")
+        raise PluginSetupRequired("请在「ComfyUI 生图」配置里填写基础模型文件名，或指定自定义 API 工作流。要在 QQ 收发图片，请为同一 Bot 启用「QQ 连接」。")
+    if Image is None:
+        raise PluginSetupRequired("请在运行 Core 的 Python 环境中安装 QQ 图片依赖 Pillow（>=11,<13），然后重新启用插件。")
     graph = load_json(package / (custom or "workflow.json"))
     if not graph or not all(isinstance(n, dict) and isinstance(n.get("class_type"), str)
                             and isinstance(n.get("inputs"), dict) for n in graph.values()):

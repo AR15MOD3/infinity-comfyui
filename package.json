@@ -1,11 +1,14 @@
 {
   "name": "infinity-comfyui",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "AR15MOD3",
   "private": true,
-  "description": "让 Bot 调用 ComfyUI 文生图，并通过 QQ 连接把图片发回会话。",
+  "description": "QQ 功能扩展。Bot 调用本地 ComfyUI 生图，由同一 Bot 已启用的「QQ 连接」（core-infinity-qq）接收请求并把图片发回原会话。",
   "keywords": [
-    "core-infinity"
+    "core-infinity",
+    "qq",
+    "comfyui",
+    "生图"
   ],
   "main": "index.py",
   "telyincore": {
