@@ -2,6 +2,12 @@
 
 ComfyUI 生图是 TelyinCore 的独立附属插件，为 QQ 会话增加画图功能。它依赖 Core 运行。在同一个 Bot 上，「QQ 连接」（`core-infinity-qq`）负责接收私聊或群聊消息，并通过 `qq_send_image` 回图。这个插件提供 `comfyui_generate`，把画面描述交给你自己的 ComfyUI。模型在 ComfyUI 所在机器上运行。
 
+## 下载和安装 ComfyUI（Windows）
+
+本插件支持的唯一生图环境是**秋葉aaaki 发布的 Windows 秋叶版 ComfyUI 整合包**。首次安装请按作者的发布说明下载、解压整合包。已经装好秋叶版的用户可以直接打开包内的绘世启动器，启动 ComfyUI，记下它显示的访问地址。[秋葉aaaki 的整合包发布说明](https://www.bilibili.com/opus/1233418589167419397)
+
+此要求针对运行 ComfyUI 的机器。TelyinCore 可以在同一台 Windows 电脑上运行，也可以从另一台机器连接。模型和工作流由使用者选择。
+
 ## 安装与连接
 
 1. 在 Core 的插件市场刷新列表，搜索 `infinity-comfyui`，选择来源为 `AR15MOD3/infinity-comfyui` 的条目并安装。在已装插件中可以看到「ComfyUI 生图」，初始为停用。仅安装时无需启动 ComfyUI、准备模型或登录 QQ。离线时解压源码，在插件管理中从包含 `package.json` 的本机目录安装。
@@ -34,7 +40,7 @@ ssh -N -L 127.0.0.1:18188:127.0.0.1:8188 用户名@Windows主机
 
 TelyinCore 需要支持 Infinity API 1、异步工具和当前 Bot 的 QQ 发图目录。已在 Windows（Python 3.11.9）和 Linux（Python 3.14）上使用 TelyinCore beta.0.5.3 系列代码、httpx 0.28.1 和 Pillow 12.3.0 进行集成测试。插件使用 Python 3.11 及以上版本提供的异步超时接口。请在宿主 Python 环境中准备 httpx（>=0.27）和 Pillow（>=11,<13），并启用提供 `qq_send_image` 的 QQ 连接。
 
-推理在独立运行的 ComfyUI 服务上完成。可以从 [ComfyUI 官方仓库](https://github.com/Comfy-Org/ComfyUI) 获取运行时。请按模型发布方的说明和授权准备模型，或使用自己已有的 API 工作流。已配置的服务直接复用现有权重，插件额外下载的权重为 0 字节。新装服务所需磁盘空间取决于模型版本与精度，还应为每次生成的原图和发送副本预留空间。
+推理在 Windows 秋叶整合包启动的 ComfyUI 服务上完成。请按模型发布方的说明和授权准备模型，或使用自己已有的 API 工作流。已配置的服务直接复用现有权重，插件额外下载的权重为 0 字节。新装服务所需磁盘空间取决于模型版本与精度，还应为每次生成的原图和发送副本预留空间。
 
 ## 停用、升级与数据
 

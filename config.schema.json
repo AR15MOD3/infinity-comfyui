@@ -3,8 +3,8 @@
   "properties": {
     "server": {
       "type": "string",
-      "title": "ComfyUI 地址",
-      "description": "从 TelyinCore 所在机器可以访问的 HTTP(S) 服务地址。",
+      "title": "秋叶版 ComfyUI 服务地址",
+      "description": "仅支持 Windows 秋叶版 ComfyUI 整合包。用绘世启动器启动后，填写 Core 能访问的服务地址，端口以启动器显示为准。",
       "default": "http://127.0.0.1:8188"
     },
     "checkpoint": {

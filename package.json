@@ -1,9 +1,9 @@
 {
   "name": "infinity-comfyui",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "author": "AR15MOD3",
   "private": true,
-  "description": "QQ 功能扩展。Bot 调用本地 ComfyUI 生图，由同一 Bot 已启用的「QQ 连接」（core-infinity-qq）接收请求并把图片发回原会话。",
+  "description": "QQ 功能扩展，仅支持 Windows 秋叶版 ComfyUI 整合包。由同一 Bot 已启用的「QQ 连接」（core-infinity-qq）接收画图请求并发回图片。",
   "keywords": [
     "core-infinity",
     "qq",
